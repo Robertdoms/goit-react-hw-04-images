@@ -27,6 +27,7 @@ const Modal = ({ onClose, children }) => {
     modalRoot
   );
 };
+
 export default Modal;
 
 Modal.propTypes = {
