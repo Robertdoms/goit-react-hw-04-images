@@ -1,16 +1,64 @@
-export const App = () => {
+import React from 'react';
+import { toast } from 'react-toastify';
+import Container from './App.styled';
+import Searchbar from './Searchbar';
+import Gallery from './ImageGallery';
+import getApiResult from '../services';
+import LoaderWrapper from './Loader/Loader';
+import Button from './Button';
+import { ToastContainer } from 'react-toastify';
+import { useState, useEffect } from 'react';
+
+const App = () => {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [images, setImages] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(1);
+
+  useEffect(() => {
+    if (searchQuery === '') {
+      return;
+    }
+    async function getFetch() {
+      try {
+        setLoading(true);
+        const updatedImages = await getApiResult(searchQuery, page);
+        if (updatedImages.length === 0) {
+          toast('No results');
+          setLoading(false);
+          return;
+        }
+        setImages(prevImages => [...prevImages, ...updatedImages]);
+      } catch (error) {
+        console.log(error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    getFetch();
+  }, [searchQuery, page]);
+
+  const onFormSubmit = newQuery => {
+    if (searchQuery === newQuery || newQuery.trim() === '') {
+      toast('can`t be empty');
+      return;
+    }
+    setSearchQuery(newQuery);
+    setImages([]);
+    setPage(1);
+  };
   return (
-    <div
-      style={{
-        height: '100vh',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        fontSize: 40,
-        color: '#010101'
-      }}
-    >
-      React homework template
-    </div>
+    <Container>
+      <Searchbar onFormSubmit={onFormSubmit} />
+      {images.length > 0 && <Gallery images={images} />}
+      {images.length !== 0 && !loading && (
+        <Button loadMore={() => setPage(prevPage => prevPage + 1)} />
+      )}
+      {loading && <LoaderWrapper />}
+      <ToastContainer autoClose={3000} />
+    </Container>
   );
 };
+
+export default App;
